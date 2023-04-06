@@ -3,8 +3,10 @@ from flask import Flask, request
 from flask_restx import Resource, Api
 from marshmallow import Schema, fields
 from sqlalchemy import create_engine, Table, Column, String, MetaData
-
+from flask_cors import CORS
+from sqlalchemy.dialects.postgresql import Insert as ins
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 engine = create_engine(environ['DB_URL'])
 meta = MetaData()
@@ -23,7 +25,10 @@ mmr_table = Table('mmrproddata', meta,
                   Column('rankimage', String),
                   Column('mmrdiff', String),
                   Column('score', String),
-                  Column('mmr', String))
+                  Column('mmr', String),
+                  Column('rank', String),
+                  Column('date', String),
+                  Column('tag', String))
 
 
 class DataSchema(Schema):
@@ -40,6 +45,9 @@ class DataSchema(Schema):
     mmr_diff = fields.Str()
     score = fields.Str()
     mmr = fields.Str()
+    rank = fields.Str()
+    date = fields.Str()
+    tag = fields.Str()
 
 
 class MMRSchema(Schema):
@@ -50,7 +58,8 @@ class MMRSchema(Schema):
 class MMR(Resource):
     def post(self):
         data = MMRSchema().load(request.json)['mmr_data']
-        stmt = mmr_table.insert().values(username=data['username'],
+        table = meta.tables['mmrproddata']
+        stmt = ins(table).values(username=data['username'],
                                          kills=data['kills'],
                                          assists=data['assists'],
                                          deaths=data['deaths'],
@@ -62,10 +71,13 @@ class MMR(Resource):
                                          rankimage=data['ranked_image'],
                                          mmrdiff=data['mmr_diff'],
                                          score=data['score'],
-                                         mmr=data['mmr'])
+                                         mmr=data['mmr'],
+                                         rank=data['rank'],
+                                         date=data['date'],
+                                         tag=data['tag']).on_conflict_do_nothing(index_elements=['username', 'date'])
 
         with engine.connect() as conn:
             conn.execute(stmt)
             conn.commit()
 
-        return {'message': 'success'}
+        return {'result': 'success'}
