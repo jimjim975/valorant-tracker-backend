@@ -68,4 +68,4 @@ class MMR(Resource):
             conn.execute(stmt)
             conn.commit()
 
-        return {'result': 'success'}
+        return {'message': 'success'}
