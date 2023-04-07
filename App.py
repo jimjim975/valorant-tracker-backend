@@ -2,10 +2,10 @@ from os import environ
 from flask import Flask, request, jsonify
 from flask_restx import Resource, Api
 from marshmallow import Schema, fields
-from sqlalchemy import create_engine, Table, Column, String, MetaData, select, text
+from sqlalchemy import create_engine, Table, Column, String, MetaData
 from flask_cors import CORS
 from sqlalchemy.dialects.postgresql import Insert as ins
-import json
+
 
 app = Flask(__name__)
 CORS(app)
