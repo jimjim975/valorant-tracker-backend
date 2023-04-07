@@ -1,10 +1,12 @@
 from os import environ
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_restx import Resource, Api
 from marshmallow import Schema, fields
-from sqlalchemy import create_engine, Table, Column, String, MetaData
+from sqlalchemy import create_engine, Table, Column, String, MetaData, select, text
 from flask_cors import CORS
 from sqlalchemy.dialects.postgresql import Insert as ins
+import json
+
 app = Flask(__name__)
 CORS(app)
 api = Api(app)
@@ -81,3 +83,18 @@ class MMR(Resource):
             conn.commit()
 
         return {'result': 'success'}
+    def get(self):
+        args = request.args
+        user = args['username']
+        tag = args['tag']
+        with engine.connect() as conn:
+            table = mmr_table.select().where(mmr_table.columns.username == user).where(mmr_table.columns.tag == tag)
+
+            result = conn.execute(table).fetchall()
+            total = []
+            for thing in result:
+                total.append(list(thing))
+                print(thing)
+            
+            return { "result": list(total) }
+            
